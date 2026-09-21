@@ -1,0 +1,10 @@
+{
+  "name": "DocSpec - Student Document Resizer & Converter",
+  "description": "Official exam document resizer and converter adhering to Annexure III scanning specifications for passport photo, signature, left thumb impression, handwritten declaration, and certificates.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

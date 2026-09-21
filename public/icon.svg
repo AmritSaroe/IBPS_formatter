@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="sheetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F1F5F9"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <!-- Background with subtle squircle -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  
+  <!-- Central Document / Spec Card -->
+  <g filter="url(#shadow)">
+    <rect x="116" y="96" width="280" height="340" rx="20" fill="url(#sheetGrad)"/>
+    
+    <!-- Document Fold Corner -->
+    <path d="M 336 96 L 396 156 L 336 156 Z" fill="#CBD5E1"/>
+    
+    <!-- Photo Box with avatar silhouette (4.5 x 3.5 ratio hint) -->
+    <rect x="148" y="140" width="100" height="115" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="3" stroke-dasharray="6 3"/>
+    <circle cx="198" cy="180" r="22" fill="#3B82F6"/>
+    <path d="M 170 236 C 170 210, 226 210, 226 236 Z" fill="#3B82F6"/>
+    
+    <!-- Signature Line with stamp / check -->
+    <rect x="264" y="150" width="108" height="14" rx="4" fill="#93C5FD"/>
+    <rect x="264" y="174" width="85" height="10" rx="3" fill="#BFDBFE"/>
+    <rect x="264" y="194" width="98" height="10" rx="3" fill="#BFDBFE"/>
+    <rect x="264" y="214" width="70" height="10" rx="3" fill="#BFDBFE"/>
+
+    <!-- Signature area with cursive pen path -->
+    <rect x="148" y="280" width="216" height="56" rx="8" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/>
+    <path d="M 168 316 Q 185 292 202 312 T 235 304 T 270 318 T 310 298 T 345 315" fill="none" stroke="#1E293B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="342" cy="308" r="3" fill="#2563EB"/>
+
+    <!-- Verification Badge (Checkmark) -->
+    <circle cx="370" cy="390" r="38" fill="#10B981" stroke="#FFFFFF" stroke-width="6"/>
+    <path d="M 356 390 L 366 400 L 386 380" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Specification badge text/lines -->
+    <rect x="148" y="362" width="140" height="12" rx="3" fill="#94A3B8"/>
+    <rect x="148" y="386" width="100" height="10" rx="3" fill="#CBD5E1"/>
+  </g>
+</svg>
