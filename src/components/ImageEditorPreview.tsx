@@ -56,12 +56,19 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
   nextDocumentTitle,
 }) => {
   const [showCompare, setShowCompare] = useState(false);
-  const [showAdvancedTools, setShowAdvancedTools] = useState(true);
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [showGuide, setShowGuide] = useState(spec.id === 'photo');
 
   // Dragging / panning state
   const imgRef = useRef<HTMLImageElement | null>(null);
   const isDraggingRef = useRef(false);
+  const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const gestureStartRef = useRef<{
+    distance: number;
+    angle: number;
+    zoom: number;
+    rotation: number;
+  } | null>(null);
   const dragStartRef = useRef<{ x: number; y: number; startOffsetX: number; startOffsetY: number }>({
     x: 0,
     y: 0,
@@ -137,6 +144,22 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (spec.outputFormat === 'pdf' || !sourceImage) return;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (activePointersRef.current.size === 2) {
+      const [first, second] = Array.from(activePointersRef.current.values());
+      gestureStartRef.current = {
+        distance: Math.hypot(second.x - first.x, second.y - first.y),
+        angle: Math.atan2(second.y - first.y, second.x - first.x),
+        zoom: options.zoom,
+        rotation: options.rotation,
+      };
+      isDraggingRef.current = false;
+      setIsDragging(false);
+      setDragDelta({ x: 0, y: 0 });
+      return;
+    }
+
     isDraggingRef.current = true;
     dragStartRef.current = {
       x: e.clientX,
@@ -149,6 +172,23 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (activePointersRef.current.has(e.pointerId)) {
+      activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (activePointersRef.current.size === 2 && gestureStartRef.current) {
+      const [first, second] = Array.from(activePointersRef.current.values());
+      const distance = Math.hypot(second.x - first.x, second.y - first.y);
+      const angle = Math.atan2(second.y - first.y, second.x - first.x);
+      const zoom = Math.min(2.5, Math.max(0.5, gestureStartRef.current.zoom * (distance / gestureStartRef.current.distance)));
+      let angleDelta = ((angle - gestureStartRef.current.angle) * 180) / Math.PI;
+      if (angleDelta > 180) angleDelta -= 360;
+      if (angleDelta < -180) angleDelta += 360;
+      const rotation = ((gestureStartRef.current.rotation + angleDelta) % 360 + 360) % 360;
+      onOptionsChange({ ...options, zoom: Number(zoom.toFixed(2)), rotation: Math.round(rotation) });
+      return;
+    }
+
     if (!isDraggingRef.current) return;
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
@@ -156,6 +196,8 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    activePointersRef.current.delete(e.pointerId);
+    if (activePointersRef.current.size < 2) gestureStartRef.current = null;
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
     setIsDragging(false);
@@ -171,9 +213,19 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
   };
 
   const handlePointerCancel = () => {
+    activePointersRef.current.clear();
+    gestureStartRef.current = null;
     isDraggingRef.current = false;
     setIsDragging(false);
     setDragDelta({ x: 0, y: 0 });
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (spec.outputFormat === 'pdf' || !sourceImage) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+    const zoom = Math.min(2.5, Math.max(0.5, options.zoom + delta));
+    onOptionsChange({ ...options, zoom: Number(zoom.toFixed(2)) });
   };
 
   const handleShare = async () => {
@@ -252,8 +304,9 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
           id="preview-stage-container"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
+            onWheel={handleWheel}
           className={`relative w-full max-w-[320px] max-h-[340px] rounded-2xl overflow-hidden shadow-sm bg-white border border-[#E0E2EC]/70 dark:border-[#282A2C] flex items-center justify-center touch-none ${
             spec.outputFormat !== 'pdf' && sourceImage ? 'cursor-grab active:cursor-grabbing' : ''
           }`}
@@ -329,11 +382,16 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
         </div>
         </div>
 
-        {/* Repositioning Hint */}
+        {/* Gesture instructions */}
         {spec.outputFormat !== 'pdf' && sourceImage && (
-          <div className="mt-2.5 flex items-center gap-1.5 text-xs text-[#747775] dark:text-[#8E918F]">
-            <Move className="w-3.5 h-3.5 text-[#0B57D0] dark:text-[#A8C7FA]" />
-            <span>Drag photo directly, or use the arrow buttons below:</span>
+          <div className="mt-3 w-full max-w-md rounded-2xl bg-[#D3E3FD]/60 dark:bg-[#004A77]/35 px-3.5 py-3 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-[#041E49] dark:text-[#C2E7FF]">
+              <Move className="w-3.5 h-3.5" />
+              <span>Edit directly on the picture</span>
+            </div>
+            <p className="mt-1 text-[11px] leading-relaxed text-[#3C4858] dark:text-[#C2E7FF]/80">
+              One finger: move · Two fingers: pinch to zoom and twist to rotate · Mouse wheel: zoom
+            </p>
           </div>
         )}
 
