@@ -20,7 +20,14 @@ npm run preview
 
 This repository includes a GitHub Actions workflow at `.github/workflows/deploy.yml`. Every push to `main` builds the app and deploys the `dist` directory to GitHub Pages.
 
-In the repository settings, open **Pages**, choose **GitHub Actions** as the build and deployment source, and save. After the first successful workflow run, the app will be available at:
+GitHub Pages must be enabled once by a repository administrator. The workflow token is intentionally not allowed to create the Pages site, so the `configure-pages` step will report `Not Found` or `Resource not accessible by integration` until this setting is completed:
+
+1. Open the repository's **Settings** page.
+2. Select **Pages** in the **Code and automation** section.
+3. Under **Build and deployment → Source**, select **GitHub Actions**.
+4. Save the setting, then open **Actions** and rerun the latest failed `Deploy to GitHub Pages` workflow, or push another commit.
+
+After the first successful workflow run, the app will be available at:
 
 <https://amritsaroe.github.io/IBPS_formatter/>
 
