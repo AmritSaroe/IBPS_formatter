@@ -56,7 +56,7 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
   nextDocumentTitle,
 }) => {
   const [showCompare, setShowCompare] = useState(false);
-  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [showAdvancedTools, setShowAdvancedTools] = useState(true);
   const [showGuide, setShowGuide] = useState(spec.id === 'photo');
 
   // Dragging / panning state
@@ -247,15 +247,17 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
       {/* Main Preview Stage */}
       <div className="p-4 sm:p-6 flex flex-col items-center justify-center bg-[#F8FAFD] dark:bg-[#131314] select-none">
         {/* Viewport Frame with Drag-to-Pan support */}
+        <div className="w-full flex justify-center">
         <div
           id="preview-stage-container"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
-          className={`relative rounded-2xl overflow-hidden shadow-sm bg-white border border-[#E0E2EC]/70 dark:border-[#282A2C] flex items-center justify-center max-h-[340px] touch-none ${
+          className={`relative w-full max-w-[320px] max-h-[340px] rounded-2xl overflow-hidden shadow-sm bg-white border border-[#E0E2EC]/70 dark:border-[#282A2C] flex items-center justify-center touch-none ${
             spec.outputFormat !== 'pdf' && sourceImage ? 'cursor-grab active:cursor-grabbing' : ''
           }`}
+          style={{ aspectRatio: `${spec.targetWidth} / ${spec.targetHeight}` }}
           title={spec.outputFormat !== 'pdf' ? 'Drag with finger or mouse to reposition image' : ''}
         >
           {result && result.format === 'pdf' ? (
@@ -274,7 +276,7 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
               </span>
             </div>
           ) : result ? (
-            <div className="relative flex items-center justify-center overflow-hidden">
+            <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
               <img
                 ref={imgRef}
                 src={showCompare && sourceImage ? sourceImage.src : result.dataUrl}
@@ -285,7 +287,7 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
                     : 'translate3d(0, 0, 0)',
                   transition: isDragging ? 'none' : 'transform 0.15s ease-out',
                 }}
-                className="max-h-[260px] sm:max-h-[300px] max-w-full object-contain pointer-events-none select-none"
+                className="w-full h-full object-contain pointer-events-none select-none"
               />
 
               {/* Passport Photo Alignment Guide (Annexure III Standard: 70-80% Face Area) */}
@@ -325,6 +327,7 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
             </div>
           )}
         </div>
+        </div>
 
         {/* Repositioning Hint */}
         {spec.outputFormat !== 'pdf' && sourceImage && (
@@ -337,6 +340,13 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
         {/* DIRECTIONAL CONTROLS & POSITION D-PAD (Left, Right, Up, Down) */}
         {spec.outputFormat !== 'pdf' && sourceImage && (
           <div className="mt-3 w-full max-w-sm flex flex-col items-center gap-2">
+            <div className="w-full flex items-center gap-2 text-left">
+              <span className="w-6 h-6 rounded-full bg-[#D3E3FD] dark:bg-[#004A77] text-[#041E49] dark:text-[#C2E7FF] text-xs font-bold flex items-center justify-center">1</span>
+              <div>
+                <p className="text-sm font-semibold text-[#1F1F1F] dark:text-[#E3E3E3]">Position your document</p>
+                <p className="text-[11px] text-[#747775] dark:text-[#8E918F]">Drag the image or use the arrows to center it.</p>
+              </div>
+            </div>
             <div className="flex items-center justify-center gap-2 sm:gap-3 p-1.5 sm:p-2 rounded-2xl bg-white dark:bg-[#1E1F20] border border-[#E0E2EC]/80 dark:border-[#282A2C] shadow-2xs">
               {/* Left */}
               <button
@@ -502,13 +512,21 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
           >
             <span className="flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-[#0B57D0] dark:text-[#A8C7FA]" />
-              <span>More adjustments (zoom, rotate, precise X/Y position, ink)</span>
+              <span>Fine-tune image settings</span>
             </span>
             {showAdvancedTools ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
 
           {showAdvancedTools && (
             <div className="mt-3 p-4 rounded-2xl bg-[#F8FAFD] dark:bg-[#131314] border border-[#E0E2EC]/70 dark:border-[#282A2C] space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#D3E3FD] dark:bg-[#004A77] text-[#041E49] dark:text-[#C2E7FF] text-xs font-bold flex items-center justify-center">2</span>
+                <div>
+                  <p className="text-sm font-semibold text-[#1F1F1F] dark:text-[#E3E3E3]">Improve appearance</p>
+                  <p className="text-[11px] text-[#747775] dark:text-[#8E918F]">Use only the adjustments your document needs.</p>
+                </div>
+              </div>
+
               {/* Enhance ink toggle */}
               {(spec.id === 'signature' || spec.id === 'thumb' || spec.id === 'declaration') && (
                 <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-[#1E1F20] border border-[#E0E2EC]/60 dark:border-[#282A2C]">
@@ -538,9 +556,10 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
               {/* Precise Position Sliders (X & Y) */}
               <div className="p-3 rounded-xl bg-white dark:bg-[#1E1F20] border border-[#E0E2EC]/60 dark:border-[#282A2C] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#1F1F1F] dark:text-[#E3E3E3]">
-                    Position Offset
-                  </span>
+                  <div>
+                    <span className="text-xs font-semibold text-[#1F1F1F] dark:text-[#E3E3E3]">Fine position</span>
+                    <p className="text-[11px] text-[#747775] dark:text-[#8E918F]">Precise horizontal and vertical movement</p>
+                  </div>
                   <button
                     type="button"
                     onClick={handleCenterPosition}
@@ -588,7 +607,7 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
               {/* Rotate & Zoom */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <span className="text-xs font-medium text-[#1F1F1F] dark:text-[#E3E3E3]">Zoom</span>
+                  <div className="flex items-center justify-between"><span className="text-xs font-medium text-[#1F1F1F] dark:text-[#E3E3E3]">Scale</span><span className="text-[11px] text-[#747775] dark:text-[#8E918F]">{Math.round(options.zoom * 100)}%</span></div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -643,7 +662,7 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
               {/* Brightness / Contrast */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-xs text-[#747775] dark:text-[#8E918F]">Brightness</span>
+                  <div className="flex justify-between text-xs text-[#747775] dark:text-[#8E918F]"><span>Brightness</span><span>{options.brightness > 0 ? '+' : ''}{options.brightness}</span></div>
                   <input
                     type="range"
                     min="-40"
@@ -655,7 +674,7 @@ export const ImageEditorPreview: React.FC<ImageEditorPreviewProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs text-[#747775] dark:text-[#8E918F]">Contrast</span>
+                  <div className="flex justify-between text-xs text-[#747775] dark:text-[#8E918F]"><span>Contrast</span><span>{options.contrast > 0 ? '+' : ''}{options.contrast}</span></div>
                   <input
                     type="range"
                     min="-40"
